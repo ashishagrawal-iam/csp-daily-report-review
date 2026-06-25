@@ -1,0 +1,118 @@
+<!--
+CleverTap Custom HTML in-app — SR-3 · 24-HOUR TICKET (live countdown timer)
+Self-contained (inline CSS+SVG+JS), CleverTap-ready. REQUIRES "Include JavaScript".
+Event props: seconds_left, total_seconds (full SLA window e.g. 86400=24h), ticket_id, ticket_id_raw, customer_name, area, issue, raised_time
+Trigger: 6 hours before a 24-hr ticket's deadline if still open. CTA opens wiom://ticket/<ticket_id_raw>.
+Differentiator vs 4-hr (SR-3) = AMBER accent + "24 घंटे" tag (CTA stays brand magenta).
+-->
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>SR-3 · 24 घंटे</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:'Nirmala UI','Segoe UI',sans-serif;color:#16121F;-webkit-font-smoothing:antialiased;overflow:hidden;
+       background:linear-gradient(180deg,#FBEFF6 0%,#F4F2F8 36%,#F4F2F8 100%)}
+  .screen{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;padding:22px 22px 26px}
+
+  .tag{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;letter-spacing:.2px;
+       padding:7px 14px;border-radius:30px;background:#FFF1DC;color:#9A5B00;margin-top:4px}
+  .tag .dot{width:8px;height:8px;border-radius:50%;background:#E8890B}
+
+  .timer{position:relative;width:208px;height:208px;margin:24px 0 6px}
+  .timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .timer .track{fill:none;stroke:#F1E6EC;stroke-width:10}
+  .timer .prog{fill:none;stroke:#E8890B;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+  .timer .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .tnum{font-size:38px;font-weight:800;letter-spacing:1px;color:#C77A00;font-variant-numeric:tabular-nums}
+  .tlabel{font-size:13px;font-weight:700;color:#897F98;margin-top:2px}
+
+  .headline{font-size:20px;font-weight:800;color:#16121F;text-align:center;margin-top:14px}
+  .subline{font-size:14px;font-weight:600;color:#8B8398;text-align:center;margin-top:6px;max-width:280px}
+
+  .card{width:100%;background:#FFFFFF;border:1px solid #F0EEF5;border-radius:16px;padding:14px 16px;margin-top:18px;
+        display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(50,30,70,.07)}
+  .card .ic{width:24px;height:24px;flex:none;color:#D9008D}
+  .card .t{flex:1;min-width:0}
+  .tid{font-size:15.5px;font-weight:800;color:#16121F}
+  .tsub{font-size:13px;color:#6C5F86;margin-top:2px}
+  .traise{font-size:12.5px;color:#9A8FAE;margin-top:4px;font-weight:600}
+
+  .spacer{flex:1;min-height:16px}
+  .cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;text-decoration:none;font-family:inherit;
+       font-size:16.5px;font-weight:800;padding:18px 16px;border-radius:15px;cursor:pointer;flex:none;color:#fff;
+       background:linear-gradient(180deg,#E11C97 0%,#C70680 100%);box-shadow:0 10px 22px rgba(199,6,128,.30)}
+  .cta:active{transform:translateY(1px)}
+  .cta svg{flex:none}
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="tag"><span class="dot"></span>टिकट {{ Event.ticket_id | default: "#10388" }}</div>
+
+  <div class="timer">
+    <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle id="arc" class="prog" cx="60" cy="60" r="52"/></svg>
+    <div class="face">
+      <div id="tnum" class="tnum">6:00:00</div>
+      <div class="tlabel">समय बाकी</div>
+    </div>
+  </div>
+
+  <div class="headline">समय रहते टिकट रीजाल्व करें</div>
+  <div class="subline">वरना क्वालिटी और<br>बोनस पर असर पड़ सकता है</div>
+
+  <div class="card">
+    <svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="3" fill="#FBE3F1"/><path d="M3 10.5h18" stroke="#D9008D" stroke-width="1.6"/><rect x="3" y="6" width="18" height="12" rx="3" stroke="#D9008D" stroke-width="1.5"/></svg>
+    <div class="t">
+      <div class="tid">{{ Event.issue | default: "स्लो स्पीड" }}</div>
+      <div class="tsub">{{ Event.customer_name | default: "प्रिया शर्मा" }} · {{ Event.area | default: "बुराड़ी" }}</div>
+      <div class="traise">{{ Event.raised_day | default: "आज" }} {{ Event.raised_period | default: "सुबह" }} {{ Event.raised_time | default: "11:00" }} बजे आया</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <a class="cta" href="javascript:void(0)" onclick="ctOpen()">अभी रीजाल्व करें</a>
+
+</div>
+
+<script>
+(function(){
+  var rem0 = parseInt(("{{ Event.seconds_left | default: '21600' }}").replace(/[^0-9]/g,''),10) || 21600;
+  var WIN = parseInt(("{{ Event.total_seconds | default: '86400' }}").replace(/[^0-9]/g,''),10) || 86400;
+  var arc = document.getElementById('arc'), num = document.getElementById('tnum');
+  var R = 52, C = 2*Math.PI*R;
+  arc.style.strokeDasharray = C;
+  var start = Date.now();
+  function pad(n){ return (n<10?'0':'')+n; }
+  function fmt(s){ var h=Math.floor(s/3600), m=Math.floor((s%3600)/60), x=s%60; return h>0 ? h+':'+pad(m)+':'+pad(x) : pad(m)+':'+pad(x); }
+  function tick(){
+    var rem = rem0 - Math.floor((Date.now()-start)/1000);
+    if(rem<0) rem=0;
+    num.textContent = fmt(rem);
+    var frac = WIN>0 ? rem/WIN : 0; if(frac>1) frac=1;
+    arc.style.strokeDashoffset = C*(1-frac);
+    if(rem<=0){ clearInterval(window.__t); }
+  }
+  tick(); window.__t = setInterval(tick,1000);
+})();
+</script>
+<script>
+(function(){
+  function iosBridge(){ return window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap; }
+  function fire(a,c,i){try{ if(window.CleverTap&&typeof window.CleverTap.triggerInAppAction==="function"){window.CleverTap.triggerInAppAction(JSON.stringify(a),c,i);} else if(iosBridge()){window.webkit.messageHandlers.clevertap.postMessage({action:"triggerInAppAction",actionJson:a,callToAction:c,buttonId:i});} }catch(e){}}
+  window.ctOpen=function(){ var u="wiom://ticket/{{ Event.ticket_id_raw | default: '10388' }}"; fire({type:"url",android:u,ios:u,url:u},"Resolve ticket","sr3_cta"); };
+})();
+</script>
+<script>
+(function(){try{ if(!document.body||document.body.innerHTML.indexOf("{{")===-1)return;
+  var rx=/\{\{\s*(?:Event|Profile)\.[^}|]*\|\s*default:\s*["']([^"']*)["']\s*\}\}/g;
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(p&&(p.nodeName==="SCRIPT"||p.nodeName==="STYLE"))return NodeFilter.FILTER_REJECT;return (n.nodeValue.indexOf("{{")>-1)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP;}});
+  var a=[],n;while(n=w.nextNode())a.push(n);a.forEach(function(t){t.nodeValue=t.nodeValue.replace(rx,"$1");});
+}catch(e){}})();
+</script>
+</body>
+</html>
