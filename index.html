@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSP Daily Report — Screen Review</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#1d1830;background:#ECECF2;
+       -webkit-font-smoothing:antialiased;padding:40px 28px 90px}
+
+  /* ---------- Page header ---------- */
+  .head{max-width:1320px;margin:0 auto}
+  .head h1{font-size:28px;font-weight:800;letter-spacing:-.3px;color:#16121F}
+  .head .sub{font-size:15px;color:#6B6478;margin-top:8px;line-height:1.5;max-width:820px}
+  .head .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+        background:#fff;border:1px solid #DEDAE8;color:#4A4358;padding:7px 13px;border-radius:30px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:#C70680}
+
+  /* ---------- Changelog banner ---------- */
+  .changelog{max-width:1320px;margin:26px auto 0;background:#fff;border:1px solid #E4DFF0;border-radius:16px;
+             padding:22px 24px;box-shadow:0 8px 24px rgba(50,30,70,.06)}
+  .changelog h3{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#C70680;margin-bottom:14px}
+  .changelog ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:11px 28px}
+  .changelog li{display:flex;gap:10px;font-size:14px;color:#352E45;line-height:1.45;align-items:flex-start}
+  .changelog li .mk{flex:none;margin-top:2px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:30px}
+  .mk.global{background:#E7F8EE;color:#0A7C3F}
+  .mk.spec{background:#FCE7F3;color:#C70680}
+  .changelog code{font-family:'Nirmala UI','Segoe UI',monospace;background:#F4F1FA;border:1px solid #E7E1F2;
+        border-radius:5px;padding:1px 6px;font-size:13.5px;color:#16121F}
+  .legend{display:flex;gap:18px;margin-top:16px;padding-top:14px;border-top:1px solid #EFEBF6;font-size:12.5px;color:#6B6478}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+  .legend .sw{width:11px;height:11px;border-radius:3px}
+
+  /* ---------- Section ---------- */
+  .section{max-width:1320px;margin:46px auto 0}
+  .section-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px;
+                padding-bottom:14px;border-bottom:2px solid #DCD8E6}
+  .section-head .kicker{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+        color:#fff;background:#C70680;padding:5px 11px;border-radius:7px}
+  .section-head h2{font-size:21px;font-weight:800;color:#16121F}
+  .section-head .when{font-size:14px;color:#8B8398;font-weight:600}
+
+  /* ---------- Comparison card ---------- */
+  .cmp{background:#fff;border:1px solid #E7E2F0;border-radius:20px;margin-top:26px;overflow:hidden;
+       box-shadow:0 10px 30px rgba(50,30,70,.06)}
+  .cmp-head{display:flex;align-items:center;gap:12px;padding:16px 22px;background:#FAF8FD;border-bottom:1px solid #EEE9F6}
+  .cmp-head .nm{font-size:16px;font-weight:800;color:#16121F}
+  .cmp-head .tag{font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:30px}
+  .tag.good{background:#E7F8EE;color:#0A7C3F}
+  .tag.bad{background:#FEECEB;color:#B42318}
+  .tag.warn{background:#FFF1DC;color:#9A5B00}
+
+  .cmp-body{display:flex;gap:26px;flex-wrap:wrap;padding:28px 22px;align-items:flex-start}
+
+  .stage{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;align-items:center;gap:11px}
+  .col .lbl{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:30px}
+  .lbl.cur{background:#EFEBF4;color:#6B6478}
+  .lbl.sug{background:#C70680;color:#fff}
+  .flow{font-size:30px;color:#C9C3D8;font-weight:300;align-self:center}
+
+  /* ---------- Phone frame ---------- */
+  .phone{width:300px;height:652px;background:#0E0B16;border-radius:36px;padding:10px;
+         box-shadow:0 22px 46px rgba(40,20,60,.20),0 4px 10px rgba(40,20,60,.10);position:relative}
+  .phone.hl{box-shadow:0 0 0 3px #C70680, 0 22px 46px rgba(199,6,128,.28)}
+  .phone::before{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);
+         width:86px;height:6px;background:#2A2536;border-radius:6px;z-index:3}
+  .phone .scr{width:100%;height:100%;border-radius:27px;overflow:hidden;background:#fff;position:relative}
+  .phone iframe{width:280px;height:632px;border:0;display:block}
+
+  /* ---------- Changes panel ---------- */
+  .changes{flex:1;min-width:300px;align-self:stretch}
+  .changes h4{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#9A8FAE;margin-bottom:14px}
+  .chg{display:flex;flex-direction:column;gap:6px;padding:14px 0}
+  .chg+.chg{border-top:1px solid #F1EDF8}
+  .chg .top{display:flex;align-items:center;gap:9px}
+  .chg .mk{flex:none;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:30px}
+  .chg .field{font-size:13.5px;font-weight:800;color:#16121F}
+  .chg .diff{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;padding-left:2px}
+  .chg .old{color:#9A8FAE;text-decoration:line-through;text-decoration-color:#D9A;background:#F7F4FB;
+        padding:3px 9px;border-radius:7px;font-family:'Nirmala UI','Segoe UI',sans-serif}
+  .chg .new{color:#0A7C3F;font-weight:700;background:#EAF9F1;padding:3px 9px;border-radius:7px;
+        font-family:'Nirmala UI','Segoe UI',sans-serif}
+  .chg .arr{color:#C9C3D8;font-size:16px}
+  .chg .note{font-size:12.5px;color:#8B8398;padding-left:2px}
+
+  @media (max-width:1100px){ .changelog ul{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+  <div class="head">
+    <h1>CSP Daily Report — Screen Review</h1>
+    <p class="sub">Daily report delivered to every CSP at <b>10 AM</b> over two in-app pages. Below, each current
+      screen is shown beside its <b>Suggested v1</b> version, with every change called out. Green = applied to all
+      screens; pink = specific to that one screen.</p>
+    <div class="meta">
+      <span class="pill"><span class="dot"></span>6 screens · 2 pages</span>
+      <span class="pill"><span class="dot"></span>Rounds 1–2</span>
+      <span class="pill"><span class="dot"></span>Channel: CleverTap in-app</span>
+    </div>
+  </div>
+
+  <!-- ===== Changelog ===== -->
+  <div class="changelog">
+    <h3>Round 1 — Copy &amp; terminology</h3>
+    <ul>
+      <li><span class="mk spec">P1 headlines</span><span>Forced line breaks: <code>बहुत बढ़िया! कल का सारा ⏎ काम पूरा हुआ</code>, <code>कल एक भी काम ⏎ पूरा नहीं हुआ</code>, <code>कल कुछ काम ⏎ बाकी रह गया</code></span></li>
+      <li><span class="mk global">Page 1</span><span>Latin <code>service</code>/<code>install</code> → Devanagari <code>सर्विस</code> / <code>इंस्टॉल</code> (Page 2's install row was later reworded, see Round 2)</span></li>
+      <li><span class="mk global">All</span><span><code>आज के कार्य</code> → <code>आज के काम</code> (Page 2 titles + Page 1 CTA)</span></li>
+      <li><span class="mk global">All</span><span>Arrow icon removed from the CTA button</span></li>
+    </ul>
+    <h3 style="margin-top:18px">Round 2 — Page 2 hero &amp; CTA (3 today screens)</h3>
+    <ul>
+      <li><span class="mk global">Page 2</span><span>New header: <code>आपके पास आज {N} टिकट हैं</code> (total tickets due today, assigned or not)</span></li>
+      <li><span class="mk global">Page 2</span><span>New subheader: <code>आज इन्हें ज़रूर पूरा करें।</code></span></li>
+      <li><span class="mk global">Page 2</span><span>CTA unified → <code>सारे टिकट देखें</code> on all three today screens</span></li>
+      <li><span class="mk global">Page 2</span><span>Removed the section label above the card (<code>पेंडिंग टिकट</code> / <code>आज के इंस्टॉल</code>)</span></li>
+      <li><span class="mk global">Page 2</span><span>Install row reworded → <code>इनमें से {N} नये कनेक्शन की टिकट हैं</code> (area names dropped)</span></li>
+    </ul>
+    <h3 style="margin-top:18px">Round 3 — Unassigned alerts reworded</h3>
+    <ul>
+      <li><span class="mk spec">None Assigned</span><span>Alert → <code>{N} टिकट अभी तक किसी को नहीं दिया गया है। अभी टीम को भेजें।</code></span></li>
+      <li><span class="mk spec">Some</span><span>Alert → <code>{N} टिकट अभी तक किसी को नहीं दिया गया है। अभी टीम को भेजें।</code> (<code>{N}</code> = unassigned count)</span></li>
+    </ul>
+    <h3 style="margin-top:18px">Round 4 — Some icon</h3>
+    <ul>
+      <li><span class="mk spec">Some</span><span>Hero icon: amber “add person” → pink clipboard (matches All Assigned)</span></li>
+    </ul>
+    <div class="legend">
+      <span><span class="sw" style="background:#0A7C3F"></span>Global — every screen</span>
+      <span><span class="sw" style="background:#C70680"></span>Specific — this screen only</span>
+    </div>
+  </div>
+
+  <!-- ============ PAGE 1 ============ -->
+  <div class="section">
+    <div class="section-head">
+      <span class="kicker">Page 1</span>
+      <h2>कल कैसा रहा? — Yesterday's status</h2>
+      <span class="when">Recap of yesterday's tickets</span>
+    </div>
+
+    <!-- P1 All Done -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">All Done</span><span class="tag good">सब पूरे</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page1-yesterday/SR1-P1-allDone-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P1-allDone.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Headline</span></div>
+            <div class="diff"><span class="old">शाबाश! कल का सारा काम पूरा हुआ</span><span class="arr">→</span><span class="new">बहुत बढ़िया! कल का सारा ⏎ काम पूरा हुआ</span></div>
+            <div class="note">New opening word + forced line break after “सारा”.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Terms</span></div>
+            <div class="diff"><span class="old">service</span><span class="arr">→</span><span class="new">सर्विस</span><span class="arr">·</span><span class="old">install</span><span class="arr">→</span><span class="new">इंस्टॉल</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">अब आज के कार्य देखें</span><span class="arr">→</span><span class="new">अब आज के काम देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P1 None Done -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">None Done</span><span class="tag bad">कुछ नहीं हुआ</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page1-yesterday/SR1-P1-noneDone-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P1-noneDone.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Headline</span></div>
+            <div class="diff"><span class="old">कल एक भी काम पूरा नहीं हुआ</span><span class="arr">→</span><span class="new">कल एक भी काम ⏎ पूरा नहीं हुआ</span></div>
+            <div class="note">Forced line break after “काम”.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Terms</span></div>
+            <div class="diff"><span class="old">service</span><span class="arr">→</span><span class="new">सर्विस</span><span class="arr">·</span><span class="old">install</span><span class="arr">→</span><span class="new">इंस्टॉल</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">अब आज के कार्य देखें</span><span class="arr">→</span><span class="new">अब आज के काम देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P1 Partial -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Partial</span><span class="tag warn">कुछ बाकी</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page1-yesterday/SR1-P1-partial-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P1-partial.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Headline</span></div>
+            <div class="diff"><span class="old">कल कुछ काम बाकी रह गया</span><span class="arr">→</span><span class="new">कल कुछ काम ⏎ बाकी रह गया</span></div>
+            <div class="note">Forced line break after “काम”.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Terms</span></div>
+            <div class="diff"><span class="old">service</span><span class="arr">→</span><span class="new">सर्विस</span><span class="arr">·</span><span class="old">install</span><span class="arr">→</span><span class="new">इंस्टॉल</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">अब आज के कार्य देखें</span><span class="arr">→</span><span class="new">अब आज के काम देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ PAGE 2 ============ -->
+  <div class="section">
+    <div class="section-head">
+      <span class="kicker">Page 2</span>
+      <h2>आज के काम — Today's tasks</h2>
+      <span class="when">Setup for today's work</span>
+    </div>
+
+    <!-- P2 All Assigned -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">All Assigned</span><span class="tag good">सब assign</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page2-today/SR1-P2-allAssigned-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P2-allAssigned.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Header — new</span></div>
+            <div class="diff"><span class="new">आपके पास ⏎ आज 5 टिकट हैं</span></div>
+            <div class="note">Total tickets due today (assigned or not). Number is dynamic — <code>total_count</code>.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Subheader — new</span></div>
+            <div class="diff"><span class="new">आज इन्हें ज़रूर पूरा करें।</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Title</span></div>
+            <div class="diff"><span class="old">आज के कार्य</span><span class="arr">→</span><span class="new">आज के काम</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Install row</span></div>
+            <div class="diff"><span class="old">2 install पेंडिंग — संगम विहार, बुराड़ी</span><span class="arr">→</span><span class="new">इनमें से 2 नये कनेक्शन की टिकट हैं</span></div>
+            <div class="note">Reworded to “new-connection tickets”; area names dropped.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Label removed</span></div>
+            <div class="diff"><span class="old">पेंडिंग टिकट</span></div>
+            <div class="note">Section label above the ticket card removed.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">आज के टिकट देखें</span><span class="arr">→</span><span class="new">सारे टिकट देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P2 None Assigned -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">None Assigned</span><span class="tag bad">कोई assign नहीं</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page2-today/SR1-P2-noneAssigned-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P2-noneAssigned.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Header — new</span></div>
+            <div class="diff"><span class="new">आपके पास ⏎ आज 6 टिकट हैं</span></div>
+            <div class="note">Total tickets due today (assigned or not). Number is dynamic — <code>total_count</code>.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Subheader — new</span></div>
+            <div class="diff"><span class="new">आज इन्हें ज़रूर पूरा करें।</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Title</span></div>
+            <div class="diff"><span class="old">आज के कार्य</span><span class="arr">→</span><span class="new">आज के काम</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Install row</span></div>
+            <div class="diff"><span class="old">2 install पेंडिंग — संगम विहार, बुराड़ी</span><span class="arr">→</span><span class="new">इनमें से 2 नये कनेक्शन की टिकट हैं</span></div>
+            <div class="note">Reworded to “new-connection tickets”; area names dropped.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Label removed</span></div>
+            <div class="diff"><span class="old">आज के install</span></div>
+            <div class="note">Section label above the ticket card removed.</div></div>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Alert copy</span></div>
+            <div class="diff"><span class="old">6 टिकट पर अभी कोई टेक्निशियन नहीं — सभी को assign करें</span><span class="arr">→</span><span class="new">6 टिकट अभी तक किसी को नहीं दिया गया है। अभी टीम को भेजें।</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">सभी टिकट assign करें</span><span class="arr">→</span><span class="new">सारे टिकट देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P2 Some -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Some Unassigned</span><span class="tag warn">कुछ assign बाकी</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="phone"><div class="scr"><iframe src="page2-today/SR1-P2-some-v2.html"></iframe></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="phone hl"><div class="scr"><iframe src="suggested-v1/SR1-P2-some.html"></iframe></div></div>
+          </div>
+        </div>
+        <div class="changes">
+          <h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Header — new</span></div>
+            <div class="diff"><span class="new">आपके पास ⏎ आज 5 टिकट हैं</span></div>
+            <div class="note">Total tickets due today (assigned or not). Number is dynamic — <code>total_count</code>.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Subheader — new</span></div>
+            <div class="diff"><span class="new">आज इन्हें ज़रूर पूरा करें।</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Title</span></div>
+            <div class="diff"><span class="old">आज के कार्य</span><span class="arr">→</span><span class="new">आज के काम</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Install row</span></div>
+            <div class="diff"><span class="old">2 install पेंडिंग — संगम विहार, बुराड़ी</span><span class="arr">→</span><span class="new">इनमें से 2 नये कनेक्शन की टिकट हैं</span></div>
+            <div class="note">Reworded to “new-connection tickets”; area names dropped.</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">Label removed</span></div>
+            <div class="diff"><span class="old">पेंडिंग टिकट</span></div>
+            <div class="note">Section label above the ticket card removed.</div></div>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Hero icon</span></div>
+            <div class="note">Amber “add person” badge → pink clipboard badge (same as All Assigned); drop-shadow recolored to pink.</div></div>
+          <div class="chg"><div class="top"><span class="mk spec" style="background:#FCE7F3;color:#C70680">Alert copy</span></div>
+            <div class="diff"><span class="old">2 टिकट पर कोई टेक्निशियन नहीं — इन्हें assign करें</span><span class="arr">→</span><span class="new">2 टिकट अभी तक किसी को नहीं दिया गया है। अभी टीम को भेजें।</span></div>
+            <div class="note">Number stays the dynamic <code>unassigned_count</code> (2 here, not 6).</div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA text</span></div>
+            <div class="diff"><span class="old">2 टिकट assign करें</span><span class="arr">→</span><span class="new">सारे टिकट देखें</span></div></div>
+          <div class="chg"><div class="top"><span class="mk global" style="background:#E7F8EE;color:#0A7C3F">CTA icon</span></div>
+            <div class="note">Arrow (→) removed from the button.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
