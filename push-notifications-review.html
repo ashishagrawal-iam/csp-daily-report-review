@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSP Push Notifications — Hook Review</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,'Nirmala UI',sans-serif;color:#1d1830;background:#ECECF2;
+       -webkit-font-smoothing:antialiased;padding:40px 28px 90px}
+
+  /* header */
+  .head{max-width:1240px;margin:0 auto}
+  .head .kicker{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#C70680}
+  .head h1{font-size:28px;font-weight:800;letter-spacing:-.3px;color:#16121F;margin-top:8px}
+  .head .sub{font-size:15px;color:#6B6478;margin-top:8px;line-height:1.5;max-width:820px}
+
+  /* changelog */
+  .changelog{max-width:1240px;margin:24px auto 0;background:#fff;border:1px solid #E4DFF0;border-radius:16px;
+             padding:22px 24px;box-shadow:0 8px 24px rgba(50,30,70,.06)}
+  .changelog h3{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#C70680;margin-bottom:14px}
+  .changelog ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .changelog li{display:flex;gap:10px;font-size:14px;color:#352E45;line-height:1.45;align-items:flex-start}
+  .changelog li .mk{flex:none;margin-top:1px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:30px;background:#FCE7F3;color:#C70680}
+  .changelog code{font-family:'Nirmala UI','Segoe UI',monospace;background:#F4F1FA;border:1px solid #E7E1F2;
+        border-radius:5px;padding:1px 6px;font-size:13.5px;color:#16121F}
+  .legend{display:flex;gap:18px;margin-top:16px;padding-top:14px;border-top:1px solid #EFEBF6;font-size:12.5px;color:#6B6478}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+  .legend .sw{width:11px;height:11px;border-radius:3px}
+
+  /* principle */
+  .principle{max-width:1240px;margin:18px auto 0;display:flex;gap:12px;align-items:flex-start;
+       background:#fff;border:1px solid #E4DFF0;border-radius:14px;padding:16px 18px;
+       box-shadow:0 8px 24px rgba(50,30,70,.05);font-size:14px;color:#5A5368;line-height:1.55}
+  .principle .em{font-size:18px;line-height:1.2}
+  .principle b{color:#16121F}
+  .rules{max-width:1240px;margin:14px auto 0;display:flex;gap:9px;flex-wrap:wrap}
+  .rule{font-size:12.5px;font-weight:700;background:#fff;border:1px solid #DEDAE8;color:#4A4358;padding:6px 12px;border-radius:30px}
+
+  /* section */
+  .section{max-width:1240px;margin:44px auto 0}
+  .section-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px;
+                padding-bottom:14px;border-bottom:2px solid #DCD8E6}
+  .section-head .kicker{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+        color:#fff;background:#C70680;padding:5px 11px;border-radius:7px}
+  .section-head h2{font-size:21px;font-weight:800;color:#16121F}
+  .section-head .when{font-size:13.5px;color:#8B8398;font-weight:600}
+
+  /* comparison card */
+  .cmp{background:#fff;border:1px solid #E7E2F0;border-radius:20px;margin-top:24px;overflow:hidden;
+       box-shadow:0 10px 30px rgba(50,30,70,.06)}
+  .cmp-head{display:flex;align-items:center;gap:12px;padding:15px 22px;background:#FAF8FD;border-bottom:1px solid #EEE9F6}
+  .cmp-head .nm{font-size:15.5px;font-weight:800;color:#16121F}
+  .cmp-head .tag{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 11px;border-radius:30px}
+  .tag.upd{background:#FCE7F3;color:#C70680}
+  .tag.same{background:#EFEBF4;color:#6B6478}
+  .tag.sd{background:#FFF1DC;color:#9A5B00}
+  .sd-card{border-color:#F3D7A8;box-shadow:0 12px 32px rgba(232,137,11,.12)}
+  .sd-card .cmp-head{background:#FFF8EC;border-bottom-color:#F3E3C4}
+  .cmp-body{display:flex;gap:26px;flex-wrap:wrap;padding:24px 22px;align-items:flex-start}
+
+  .stage{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .col .lbl{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:30px}
+  .lbl.cur{background:#EFEBF4;color:#6B6478}
+  .lbl.sug{background:#C70680;color:#fff}
+  .lbl.sd{background:#E8890B;color:#fff}
+  .flow{font-size:28px;color:#C9C3D8;font-weight:300;align-self:center}
+
+  /* lock-screen wallpaper tile */
+  .wall{width:318px;border-radius:26px;padding:20px 14px 15px;
+        background:linear-gradient(160deg,#2A1A47 0%,#5B2A6B 46%,#C2477F 100%)}
+  .wall.hl{box-shadow:0 0 0 3px #C70680}
+  .lock{text-align:center;color:#fff;margin-bottom:16px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+  .lock .clock{font-size:38px;font-weight:300;letter-spacing:1px;line-height:1}
+  .lock .date{font-size:12.5px;font-weight:600;opacity:.9;margin-top:3px}
+
+  /* notification card */
+  .pn{background:rgba(255,255,255,.95);border-radius:18px;padding:12px 14px;box-shadow:0 6px 16px rgba(0,0,0,.14)}
+  .pn-head{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+  .pn-icon{width:24px;height:24px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:800;font-size:12px;background:linear-gradient(180deg,#E11C97,#C70680)}
+  .pn-app{font-size:11.5px;font-weight:700;color:#5b5566;text-transform:uppercase;letter-spacing:.4px}
+  .pn-time{margin-left:auto;font-size:11.5px;color:#9a93a3}
+  .pn-title{font-size:14.5px;font-weight:800;color:#16121F;line-height:1.3}
+  .pn-body{font-size:13.5px;color:#3a3446;margin-top:3px;line-height:1.4}
+  .pn-ph{font-size:13.5px;font-weight:600;color:#9A8FAE;text-align:center;padding:16px 8px;
+        border:1px dashed #D8CFE6;border-radius:10px;margin-top:2px}
+  .pn-meta{display:flex;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid #ECE8F2}
+  .cc{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:30px;background:#EAF9F1;color:#0A7C3F}
+  .cc.over{background:#FEECEB;color:#B42318}
+  .cc .lim{opacity:.6;font-weight:600}
+
+  /* changes panel */
+  .changes{flex:1;min-width:280px;align-self:stretch}
+  .changes h4{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#9A8FAE;margin-bottom:12px}
+  .chg{display:flex;flex-direction:column;gap:6px;padding:12px 0}
+  .chg+.chg{border-top:1px solid #F1EDF8}
+  .chg .top{display:flex;align-items:center;gap:9px}
+  .chg .mk{flex:none;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:30px;background:#FCE7F3;color:#C70680}
+  .chg .diff{display:flex;flex-direction:column;gap:7px;font-size:13.5px;padding-left:2px}
+  .chg .old{color:#9A8FAE;text-decoration:line-through;text-decoration-color:#D9A;background:#F7F4FB;
+        padding:4px 9px;border-radius:7px}
+  .chg .new{color:#0A7C3F;font-weight:700;background:#EAF9F1;padding:4px 9px;border-radius:7px}
+  .chg .note{font-size:12.5px;color:#8B8398;padding-left:2px}
+  .chg .nochg{font-size:13px;color:#9A8FAE;font-style:italic}
+
+  /* notes */
+  .notes{max-width:1240px;margin:48px auto 0;background:#fff;border:1px solid #E4DFF0;border-radius:16px;
+         padding:22px 24px;box-shadow:0 8px 24px rgba(50,30,70,.05)}
+  .notes h3{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#C70680;margin-bottom:12px}
+  .notes ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .notes li{display:flex;gap:10px;font-size:14px;color:#352E45;line-height:1.5}
+  .notes li::before{content:"→";color:#C9A;font-weight:800;flex:none}
+  .notes code{font-family:'Nirmala UI','Segoe UI',monospace;background:#F4F1FA;border:1px solid #E7E1F2;
+        border-radius:5px;padding:1px 6px;font-size:13px;color:#16121F}
+
+  @media (max-width:760px){ .cmp-body{justify-content:center} }
+</style>
+</head>
+<body>
+
+  <div class="head">
+    <div class="kicker">Wiom · CSP Nudge Series</div>
+    <h1>Push Notifications — Hook Review</h1>
+    <p class="sub">Lock-screen previews of the SR-1 / SR-3 / SR-4 push notifications. Updated notifications are shown
+      <b>Current → Suggested</b> with the change called out; unchanged ones are shown as-is. Character counts are checked
+      live against the limits (title ≤ 40, body ≤ 90).</p>
+  </div>
+
+  <!-- ===== Changelog ===== -->
+  <div class="changelog">
+    <h3>Round 1 — Requested changes</h3>
+    <ul>
+      <li><span class="mk">SR-3 · Rec</span><span>Body: <code>हल कर दें → रीजाल्व करें</code> and <code>अभी देखिए कौन-सी → डिटेल देखें</code></span></li>
+      <li><span class="mk">SR-1 · Alt</span><span>Body: <code>खोलकर देखिए → डिटेल देखिए</code></span></li>
+      <li><span class="mk" style="background:#FFF1DC;color:#9A5B00">SR-4 · SD</span><span>New <b>Sol. Design’s Recommendation</b> card → title <code>बोनस पर असर पड़ सकता है</code>, body <code>इस टिकट को अभी रीजाल्व करें। डिटेल देखें।</code></span></li>
+      <li><span class="mk" style="background:#FFF1DC;color:#9A5B00">SR-1 · SD</span><span>New <b>Sol. Design’s Recommendation</b> card → title <code>आज का प्लान तैयार है 📋</code>, body <code>कितने टिकट पूरे करने हैं? डिटेल देखिए।</code></span></li>
+      <li><span class="mk" style="background:#FFF1DC;color:#9A5B00">SR-3 · SD</span><span>New <b>Sol. Design’s Recommendation</b> card → title <code>⏳ एक टिकट की समय सीमा पास है</code>, body <code>समय रहते रीजाल्व करें — डिटेल देखें।</code></span></li>
+    </ul>
+    <div class="legend">
+      <span><span class="sw" style="background:#C70680"></span>Updated — this notification changed</span>
+      <span><span class="sw" style="background:#9A93A3"></span>Unchanged — shown as-is</span>
+      <span><span class="sw" style="background:#E8890B"></span>Sol. Design’s Recommendation — team’s own pick</span>
+    </div>
+  </div>
+
+  <div class="principle">
+    <span class="em">🪝</span>
+    <span><b>The PN is a hook only.</b> It creates curiosity / urgency and earns the tap — the actual numbers, ticket id,
+      customer and time-left are revealed <b>inside the app</b> (the SR-1 / SR-3 / SR-4 screen the tap opens).</span>
+  </div>
+  <div class="rules">
+    <span class="rule">B2B partner tone · plain Hindi</span>
+    <span class="rule">No counts / names / exact times</span>
+    <span class="rule">Emoji optional</span>
+    <span class="rule">टिकट = feminine (“खुली”)</span>
+    <span class="rule">Title ≤ 40 · Body ≤ 90</span>
+  </div>
+
+  <!-- ============ SR-1 ============ -->
+  <div class="section">
+    <div class="section-head"><span class="kicker">SR-1</span><h2>Morning daily report</h2>
+      <span class="when">fires ~10 AM · tap → SR-1 page 1 “कल कैसा रहा?”</span></div>
+
+    <!-- SR-1 Recommended (unchanged) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Recommended</span><span class="tag same">Unchanged</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col">
+            <div class="wall"><div class="lock"><div class="clock">10:00</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">सुप्रभात! आज के काम तैयार हैं ☀️</div>
+                <div class="pn-body">एक नज़र देखिए — कल कैसा रहा और आज क्या करना है।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4><div class="chg"><span class="nochg">No change this round.</span></div></div>
+      </div>
+    </div>
+
+    <!-- SR-1 Alternate (updated) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Alternate</span><span class="tag upd">Updated</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="wall"><div class="lock"><div class="clock">10:00</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">आज का प्लान तैयार है 📋</div>
+                <div class="pn-body">कितने टिकट पूरे करने हैं? खोलकर देखिए।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="wall hl"><div class="lock"><div class="clock">10:00</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">आज का प्लान तैयार है 📋</div>
+                <div class="pn-body">कितने टिकट पूरे करने हैं? डिटेल देखिए।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk">Body</span></div>
+            <div class="diff"><span class="old">कितने टिकट पूरे करने हैं? खोलकर देखिए।</span><span class="new">कितने टिकट पूरे करने हैं? डिटेल देखिए।</span></div>
+            <div class="note">“खोलकर देखिए” → “डिटेल देखिए”.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SR-1 Sol. Design's Recommendation -->
+    <div class="cmp sd-card">
+      <div class="cmp-head"><span class="nm">Sol. Design’s Recommendation</span><span class="tag sd">★ New</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl sd">Sol. Design</span>
+            <div class="wall hl"><div class="lock"><div class="clock">10:00</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">आज का प्लान तैयार है 📋</div>
+                <div class="pn-body">कितने टिकट पूरे करने हैं? डिटेल देखिए।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>Why this</h4>
+          <div class="chg"><div class="note">Solution Design’s pick for SR-1 — the refined morning hook with the clearer CTA (<code>डिटेल देखिए</code>).</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SR-3 ============ -->
+  <div class="section">
+    <div class="section-head"><span class="kicker">SR-3</span><h2>SLA approaching</h2>
+      <span class="when">fires before deadline · tap → SR-3 countdown screen</span></div>
+
+    <!-- SR-3 Recommended (updated) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Recommended</span><span class="tag upd">Updated</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl cur">Current</span>
+            <div class="wall"><div class="lock"><div class="clock">2:30</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">⏳ एक टिकट की समय सीमा पास है</div>
+                <div class="pn-body">समय रहते हल कर दें — अभी देखिए कौन-सी।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+          <div class="flow">→</div>
+          <div class="col"><span class="lbl sug">Suggested</span>
+            <div class="wall hl"><div class="lock"><div class="clock">2:30</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">⏳ एक टिकट की समय सीमा पास है</div>
+                <div class="pn-body">समय रहते रीजाल्व करें — डिटेल देखें।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4>
+          <div class="chg"><div class="top"><span class="mk">Body</span></div>
+            <div class="diff"><span class="old">समय रहते हल कर दें — अभी देखिए कौन-सी।</span><span class="new">समय रहते रीजाल्व करें — डिटेल देखें।</span></div>
+            <div class="note">“हल” → “रीजाल्व” · “अभी देखिए कौन-सी” → “डिटेल देखें”.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SR-3 Alternate (unchanged) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Alternate</span><span class="tag same">Unchanged</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col">
+            <div class="wall"><div class="lock"><div class="clock">2:30</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">घड़ी चल रही है ⏳</div>
+                <div class="pn-body">एक टिकट जल्दी हल करनी है। टैप करके देखिए।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4><div class="chg"><span class="nochg">No change this round. (Note: still uses “हल”.)</span></div></div>
+      </div>
+    </div>
+
+    <!-- SR-3 Sol. Design's Recommendation -->
+    <div class="cmp sd-card">
+      <div class="cmp-head"><span class="nm">Sol. Design’s Recommendation</span><span class="tag sd">★ New</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl sd">Sol. Design</span>
+            <div class="wall hl"><div class="lock"><div class="clock">2:30</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">⏳ एक टिकट की समय सीमा पास है</div>
+                <div class="pn-body">समय रहते रीजाल्व करें — डिटेल देखें।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>Why this</h4>
+          <div class="chg"><div class="note">Solution Design’s pick for SR-3 — <code>रीजाल्व</code> + <code>डिटेल देखें</code>, matching the in-app screen wording.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SR-4 ============ -->
+  <div class="section">
+    <div class="section-head"><span class="kicker">SR-4</span><h2>Overdue re-ping</h2>
+      <span class="when">fires past deadline, still open · tap → SR-4 screen</span></div>
+
+    <!-- SR-4 Recommended (unchanged) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Recommended</span><span class="tag same">Unchanged</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col">
+            <div class="wall"><div class="lock"><div class="clock">6:15</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">⚠️ एक टिकट अभी तक खुली है</div>
+                <div class="pn-body">समय सीमा निकल चुकी है — अभी हल करना ज़रूरी है।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4><div class="chg"><span class="nochg">No change this round. (Note: still uses “हल”.)</span></div></div>
+      </div>
+    </div>
+
+    <!-- SR-4 Alternate (unchanged) -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="nm">Alternate</span><span class="tag same">Unchanged</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col">
+            <div class="wall"><div class="lock"><div class="clock">6:15</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">🔴 एक टिकट रुकी हुई है</div>
+                <div class="pn-body">देर हो रही है — तुरंत देखिए।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>What changed</h4><div class="chg"><span class="nochg">No change this round.</span></div></div>
+      </div>
+    </div>
+
+    <!-- SR-4 Sol. Design's Recommendation (new) -->
+    <div class="cmp sd-card">
+      <div class="cmp-head"><span class="nm">Sol. Design’s Recommendation</span><span class="tag sd">★ New</span></div>
+      <div class="cmp-body">
+        <div class="stage">
+          <div class="col"><span class="lbl sd">Sol. Design</span>
+            <div class="wall hl"><div class="lock"><div class="clock">6:15</div><div class="date">सोमवार, 26 जून</div></div>
+              <div class="pn"><div class="pn-head"><div class="pn-icon">W</div><div class="pn-app">Wiom Partner</div><div class="pn-time">अभी</div></div>
+                <div class="pn-title">बोनस पर असर पड़ सकता है</div>
+                <div class="pn-body">इस टिकट को अभी रीजाल्व करें। डिटेल देखें।</div>
+                <div class="pn-meta"></div></div></div>
+          </div>
+        </div>
+        <div class="changes"><h4>Why this</h4>
+          <div class="chg"><div class="note">Solution Design’s own recommended copy for this nudge — leads with the <b>bonus-impact</b> hook (“बोनस पर असर पड़ सकता है”), then a direct CTA: <code>इस टिकट को अभी रीजाल्व करें</code> + <code>डिटेल देखें</code>. Stronger pull than the generic “देर हो रही है”.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Notes -->
+  <div class="notes">
+    <h3>Notes</h3>
+    <ul>
+      <li><b style="margin-right:4px">Deep link:</b> the tap should open the matching in-app screen (SR-1 daily report / the specific SR-3 / SR-4 ticket), where the full detail is shown.</li>
+      <li><b style="margin-right:4px">Length:</b> keep title under ~40 chars and body under ~90 so nothing truncates on the collapsed lock-screen view.</li>
+      <li><b style="margin-right:4px">Personalization (later):</b> the safest hook-preserving token is a name greeting in SR-1 only, e.g. <code>{{first_name}} जी, आज के काम तैयार हैं</code> — still no numbers revealed.</li>
+    </ul>
+  </div>
+
+<script>
+(function(){
+  function glen(s){ s=(s||'').replace(/\s+/g,' ').trim();
+    try{ var seg=new Intl.Segmenter('hi',{granularity:'grapheme'}); var n=0; for(var x of seg.segment(s)){ n++; } return n; }
+    catch(e){ return Array.from(s).length; } }
+  function chip(label,len,lim){ var over=len>lim;
+    return '<span class="cc'+(over?' over':'')+'">'+label+' '+len+'<span class="lim">/'+lim+'</span></span>'; }
+  document.querySelectorAll('.pn').forEach(function(pn){
+    var tEl=pn.querySelector('.pn-title'), bEl=pn.querySelector('.pn-body'), mEl=pn.querySelector('.pn-meta');
+    if(!tEl || !bEl || !mEl) return;
+    mEl.innerHTML = chip('Title', glen(tEl.textContent), 40) + chip('Body', glen(bEl.textContent), 90);
+  });
+})();
+</script>
+</body>
+</html>
